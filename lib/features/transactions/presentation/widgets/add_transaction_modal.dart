@@ -125,6 +125,7 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
           ),
           const SizedBox(height: 16),
           TextField(
+            key: const Key('amount_text_field'),
             controller: _amountController,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
@@ -134,6 +135,7 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
           ),
           const SizedBox(height: 16),
           TextField(
+            key: const Key('description_text_field'),
             controller: _descriptionController,
             maxLength: 50,
             decoration: const InputDecoration(labelText: 'What was this for?'),

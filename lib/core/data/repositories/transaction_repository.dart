@@ -12,6 +12,17 @@ class TransactionRepository {
     await _transactionBox.put(transaction.id, transaction);
   }
 
+  /// Deletes a specific transaction from the Hive box using its ID.
+  Future<void> deleteTransaction(String id) async {
+    await _transactionBox.delete(id);
+  }
+
+  /// Updates an existing transaction in the Hive box.
+  /// If a transaction with the same ID does not exist, it will be added.
+  Future<void> updateTransaction(Transaction transaction) async {
+    await _transactionBox.put(transaction.id, transaction);
+  }
+
   /// Clears all transactions from the Hive box.
   Future<void> clearAllTransactions() async {
     await _transactionBox.clear();

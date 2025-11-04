@@ -43,30 +43,16 @@ class BudgetRepository {
   /// - If no existing budget is found (or `orElse` returns the new budget itself),
   ///   the new budget is simply added to the box.
   Future<void> saveBudget(Budget budget) async {
-    final existingBudget = _budgetBox.values.firstWhere(
-      (b) => b.category == budget.category,
-      orElse: () => budget, // If not found, return the new budget to be added
-    );
-
-    if (existingBudget != budget) {
-      // If an existing budget was found and it's different, update it
-      await existingBudget.delete(); // Delete the old one
-      await _budgetBox.add(budget); // Add the new one
-    } else {
-      // If no existing budget was found (orElse returned the new budget), add it
-      await _budgetBox.add(budget);
-    }
+    // Use the category name as the key for the budget
+    await _budgetBox.put(budget.category.name, budget);
   }
 
   /// Deletes a budget by its [Category].
   ///
-  /// It finds the budget associated with the given [category] and removes it from the Hive box.
-  /// Throws an [Exception] if no budget is found for the specified category.
+  /// It removes the budget associated with the given [category] from the Hive box.
+  /// If no budget is found for the specified category, the operation will complete
+  /// without error, as Hive's delete method is idempotent.
   Future<void> deleteBudget(Category category) async {
-    final budgetToDelete = _budgetBox.values.firstWhere(
-      (b) => b.category == category,
-      orElse: () => throw Exception('Budget for category $category not found'),
-    );
-    await budgetToDelete.delete();
+    await _budgetBox.delete(category.name);
   }
 }
