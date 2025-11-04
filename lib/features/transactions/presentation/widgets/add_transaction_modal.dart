@@ -8,7 +8,9 @@ import 'package:uuid/uuid.dart';
 import 'package:fintrack_app/config/app_theme.dart'; // Import AppSpacing
 
 class AddTransactionModal extends ConsumerStatefulWidget {
-  const AddTransactionModal({super.key});
+  const AddTransactionModal({super.key, this.transactionToEdit});
+
+  final Transaction? transactionToEdit;
 
   @override
   ConsumerState<AddTransactionModal> createState() =>
@@ -22,6 +24,18 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
   TransactionType _selectedType = TransactionType.expense;
   DateTime _selectedDate = DateTime.now();
   Category? _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.transactionToEdit != null) {
+      _amountController.text = widget.transactionToEdit!.amount.toString();
+      _descriptionController.text = widget.transactionToEdit!.description ?? '';
+      _selectedType = widget.transactionToEdit!.type;
+      _selectedDate = widget.transactionToEdit!.date;
+      _selectedCategory = widget.transactionToEdit!.category;
+    }
+  }
 
   @override
   void dispose() {
@@ -68,18 +82,34 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
       final transactionRepository = await ref.read(
         transactionRepositoryProvider.future,
       );
-      final newTransaction = Transaction(
-        id: const Uuid().v4(),
-        amount: enteredAmount,
-        date: _selectedDate,
-        type: _selectedType,
-        description: _descriptionController.text.trim(),
-        category: _selectedType == TransactionType.expense
-            ? _selectedCategory
-            : null,
-      );
 
-      await transactionRepository.addTransaction(newTransaction);
+      if (widget.transactionToEdit == null) {
+        // Add new transaction
+        final newTransaction = Transaction(
+          id: const Uuid().v4(),
+          amount: enteredAmount,
+          date: _selectedDate,
+          type: _selectedType,
+          description: _descriptionController.text.trim(),
+          category: _selectedType == TransactionType.expense
+              ? _selectedCategory
+              : null,
+        );
+        await transactionRepository.addTransaction(newTransaction);
+      } else {
+        // Update existing transaction
+        final updatedTransaction = widget.transactionToEdit!.copyWith(
+          amount: enteredAmount,
+          date: _selectedDate,
+          type: _selectedType,
+          description: _descriptionController.text.trim(),
+          category: _selectedType == TransactionType.expense
+              ? _selectedCategory
+              : null,
+        );
+        await transactionRepository.updateTransaction(updatedTransaction);
+      }
+
       if (mounted) {
         Navigator.pop(context);
       }
@@ -218,12 +248,11 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
                         Expanded(
                           child: Text(
                             'Selected Date: ${formatDate(_selectedDate)}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                           ),
                         ),
@@ -257,9 +286,7 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
                             children: [
                               Text(
                                 'Select Category:',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
+                                style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
                                       color: Theme.of(
                                         context,
@@ -278,17 +305,18 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
                                     showCheckmark: false,
                                     onSelected: (selected) {
                                       setState(() {
-                                        _selectedCategory =
-                                            selected ? category : null;
+                                        _selectedCategory = selected
+                                            ? category
+                                            : null;
                                         state.didChange(_selectedCategory);
                                       });
                                     },
                                     avatar: Icon(
                                       category.icon,
                                       color: isSelected
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.onPrimary
                                           : category.color,
                                     ),
                                     labelStyle: Theme.of(context)
@@ -313,9 +341,9 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
                                     side: BorderSide(
                                       color: isSelected
                                           ? category.color
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .outline,
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
                                     ),
                                   );
                                 }).toList(),
@@ -327,13 +355,11 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
                                   ),
                                   child: Text(
                                     state.errorText!,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
+                                    style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .error,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.error,
                                         ),
                                   ),
                                 ),
@@ -373,7 +399,10 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
 }
 
 // Function to show the modal bottom sheet
-void showAddTransactionModal(BuildContext context) {
+void showAddTransactionModal(
+  BuildContext context, {
+  Transaction? transactionToEdit,
+}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -381,7 +410,7 @@ void showAddTransactionModal(BuildContext context) {
     useSafeArea: true,
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-      child: const AddTransactionModal(),
+      child: AddTransactionModal(transactionToEdit: transactionToEdit),
     ),
   );
 }

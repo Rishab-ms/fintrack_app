@@ -8,6 +8,12 @@ import 'package:fintrack_app/core/shared/utils/date_money_helpers.dart';
 import 'package:fintrack_app/features/dashboard/providers/dashboard_providers.dart';
 import 'package:fintrack_app/features/transactions/presentation/transaction_list_screen.dart'; // For "View All" navigation
 import 'package:fintrack_app/main.dart'; // Import main.dart to access themeModeProvider
+import 'package:path_provider/path_provider.dart'; // For getting application documents directory
+import 'package:csv/csv.dart'; // For CSV conversion
+import 'dart:io'; // For File operations
+import 'package:permission_handler/permission_handler.dart'; // For permission handling
+import 'package:open_filex/open_filex.dart'; // For opening files
+import 'package:intl/intl.dart'; // Import for DateFormat
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -26,12 +32,18 @@ class DashboardScreen extends ConsumerWidget {
         centerTitle: false,
         actions: [
           PopupMenuButton<String>(
-            onSelected: (value) {
+            onSelected: (value) async {
               if (value == 'download_csv') {
-                // TODO: Implement CSV download functionality
+                final transactions = await ref.read(
+                  allTransactionsProvider.future,
+                );
+                _exportTransactionsToCsv(context, transactions);
               } else if (value == 'toggle_dark_mode') {
-                ref.read(themeModeProvider.notifier).state =
-                    themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+                ref
+                    .read(themeModeProvider.notifier)
+                    .state = themeMode == ThemeMode.light
+                    ? ThemeMode.dark
+                    : ThemeMode.light;
               }
             },
             icon: const Icon(Icons.more_vert_rounded),
@@ -48,8 +60,8 @@ class DashboardScreen extends ConsumerWidget {
                     Text(
                       'Download CSV',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                   ],
                 ),
@@ -70,8 +82,8 @@ class DashboardScreen extends ConsumerWidget {
                           ? 'Toggle Light Mode'
                           : 'Toggle Dark Mode',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                   ],
                 ),
@@ -114,14 +126,18 @@ class DashboardScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'Current Balance',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         formatCurrency(balanceData.currentBalance),
-                        style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                       ),
@@ -162,8 +178,8 @@ class DashboardScreen extends ConsumerWidget {
                       child: Text(
                         'No expenses for the current month to display chart.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                     ),
                   ),
@@ -181,7 +197,8 @@ class DashboardScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'Expense Distribution (Current Month)',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
                         ),
@@ -209,9 +226,9 @@ class DashboardScreen extends ConsumerWidget {
                                       .bodyMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimary,
                                       ),
                                   badgeWidget: null, // No badge for now
                                 );
@@ -255,8 +272,11 @@ class DashboardScreen extends ConsumerWidget {
                         children: [
                           Text(
                             'Recent Transactions',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                           ),
                           TextButton(
@@ -270,8 +290,11 @@ class DashboardScreen extends ConsumerWidget {
                             },
                             child: Text(
                               'View All',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                             ),
                           ),
@@ -284,8 +307,11 @@ class DashboardScreen extends ConsumerWidget {
                           child: Center(
                             child: Text(
                               'No recent transactions.',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurface,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                             ),
                           ),
@@ -307,6 +333,62 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _exportTransactionsToCsv(
+    BuildContext context,
+    List<Transaction> transactions,
+  ) async {
+    // Request storage permission
+    var status = await Permission.storage.status;
+    if (!status.isGranted) {
+      status = await Permission.storage.request();
+    }
+
+    if (status.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Exporting transactions to CSV...')),
+      );
+
+      List<List<dynamic>> rows = [];
+      rows.add([
+        "Amount",
+        "Date",
+        "Type",
+        "Description",
+        "Category",
+      ]); // CSV Header
+
+      for (var transaction in transactions) {
+        rows.add([
+          transaction.amount,
+          DateFormat('yyyy-MM-dd').format(transaction.date),
+          transaction.type.toString().split('.').last,
+          transaction.description ?? '',
+          transaction.category?.displayName ?? '',
+        ]);
+      }
+
+      String csv = const ListToCsvConverter().convert(rows);
+
+      final directory = await getApplicationDocumentsDirectory();
+      final path = '${directory.path}/transactions.csv';
+      final file = File(path);
+      await file.writeAsString(csv);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transactions exported to $path. Opening file...'),
+        ),
+      );
+      await OpenFilex.open(path);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Storage permission denied. Cannot export CSV.'),
+        ),
+      );
+    }
+  }
+
   Widget _buildBalanceDetail(
     BuildContext context,
     String title,
@@ -319,16 +401,16 @@ class DashboardScreen extends ConsumerWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           formatCurrency(amount),
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );
@@ -346,12 +428,14 @@ class DashboardScreen extends ConsumerWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: (transaction.category?.color ??
-                    Theme.of(context).colorScheme.surfaceVariant)
-                .withOpacity(0.2),
+            backgroundColor:
+                (transaction.category?.color ??
+                        Theme.of(context).colorScheme.surfaceVariant)
+                    .withOpacity(0.2),
             child: Icon(
               transaction.category?.icon ?? Icons.attach_money,
-              color: transaction.category?.color ??
+              color:
+                  transaction.category?.color ??
                   Theme.of(context).colorScheme.onSurfaceVariant,
               size: 20,
             ),
@@ -367,17 +451,17 @@ class DashboardScreen extends ConsumerWidget {
                           ? transaction.category?.displayName ?? 'Expense'
                           : 'Income'),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   '${formatDate(transaction.date)} ${isExpense ? '• ${transaction.category?.displayName ?? ''}' : ''}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -385,9 +469,9 @@ class DashboardScreen extends ConsumerWidget {
           Text(
             '$sign ${formatCurrency(transaction.amount)}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: amountColor,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: amountColor,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -415,9 +499,9 @@ class _LegendWidget extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
       ],
     );

@@ -26,4 +26,22 @@ class Transaction extends HiveObject {
     this.description,
     this.category,
   });
+
+  Transaction copyWith({
+    String? id,
+    double? amount,
+    DateTime? date,
+    TransactionType? type,
+    String? description,
+    Category? category,
+  }) {
+    return Transaction(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      type: type ?? this.type,
+      description: description ?? this.description,
+      category: category ?? this.category,
+    );
+  }
 }
