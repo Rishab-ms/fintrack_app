@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
 part 'constants.g.dart';
@@ -26,4 +27,44 @@ enum Category {
   health,
   @HiveField(6)
   other,
+}
+
+extension CategoryExtension on Category {
+  String get displayName {
+    switch (this) {
+      case Category.food:
+        return 'Food';
+      case Category.travel:
+        return 'Travel';
+      case Category.bills:
+        return 'Bills';
+      case Category.shopping:
+        return 'Shopping';
+      case Category.entertainment:
+        return 'Entertainment';
+      case Category.health:
+        return 'Health';
+      case Category.other:
+        return 'Other';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case Category.food:
+        return Icons.fastfood;
+      case Category.travel:
+        return Icons.flight;
+      case Category.bills:
+        return Icons.receipt;
+      case Category.shopping:
+        return Icons.shopping_cart;
+      case Category.entertainment:
+        return Icons.movie;
+      case Category.health:
+        return Icons.health_and_safety;
+      case Category.other:
+        return Icons.category;
+    }
+  }
 }

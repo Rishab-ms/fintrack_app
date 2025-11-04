@@ -4,8 +4,8 @@ import 'package:fintrack_app/core/data/models/budget_model.dart';
 import 'package:fintrack_app/core/shared/constants.dart';
 
 class HiveService {
-  late Box<Transaction> transactionBox;
-  late Box<Budget> budgetBox;
+  late final Box<Transaction> transactionBox;
+  late final Box<Budget> budgetBox;
 
   static Future<void> init() async {
     await Hive.initFlutter();

@@ -3,11 +3,9 @@ import 'package:fintrack_app/core/data/models/budget_model.dart';
 import 'package:fintrack_app/core/data/services/hive_service.dart';
 
 class BudgetRepository {
-  final HiveService _hiveService;
+  final Box<Budget> _budgetBox;
 
-  BudgetRepository(this._hiveService);
-
-  Box<Budget> get _budgetBox => _hiveService.budgetBox;
+  BudgetRepository(this._budgetBox);
 
   /// Returns a stream of all budgets, reacting to changes in the Hive box.
   Stream<List<Budget>> watchAllBudgets() {

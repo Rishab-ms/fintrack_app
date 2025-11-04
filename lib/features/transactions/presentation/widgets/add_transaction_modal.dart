@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fintrack_app/core/data/models/transaction_model.dart';
-import 'package:fintrack_app/core/data/repositories/transaction_repository.dart';
 import 'package:fintrack_app/core/providers/core_providers.dart';
 import 'package:fintrack_app/core/shared/constants.dart';
 import 'package:fintrack_app/core/shared/utils/date_money_helpers.dart';
@@ -45,7 +44,7 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
     }
   }
 
-  void _submitTransaction() {
+  Future<void> _submitTransaction() async {
     final enteredAmount = double.tryParse(_amountController.text);
     final amountIsInvalid = enteredAmount == null || enteredAmount <= 0;
 
@@ -53,7 +52,7 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
         _descriptionController.text.trim().isEmpty ||
         (_selectedType == TransactionType.expense &&
             _selectedCategory == null)) {
-      showDialog(
+      await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Invalid Input'),
@@ -73,7 +72,8 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
       return;
     }
 
-    final transactionRepository = ref.read(transactionRepositoryProvider);
+    final transactionRepository =
+        await ref.read(transactionRepositoryProvider.future);
     final newTransaction = Transaction(
       id: const Uuid().v4(),
       amount: enteredAmount,
@@ -85,8 +85,10 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
           : null,
     );
 
-    transactionRepository.addTransaction(newTransaction);
-    Navigator.pop(context);
+    await transactionRepository.addTransaction(newTransaction);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -179,7 +181,7 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
                                 backgroundColor: _selectedCategory == category
                                     ? Theme.of(
                                         context,
-                                      ).primaryColor.withOpacity(0.3)
+                                      ).primaryColor.withAlpha((255 * 0.3).round())
                                     : Colors.grey.shade200,
                                 child: Icon(
                                   category.icon,

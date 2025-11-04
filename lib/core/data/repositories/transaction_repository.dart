@@ -3,21 +3,28 @@ import 'package:fintrack_app/core/data/models/transaction_model.dart';
 import 'package:fintrack_app/core/data/services/hive_service.dart';
 
 class TransactionRepository {
-  final HiveService _hiveService;
+  final Box<Transaction> _transactionBox;
 
-  TransactionRepository(this._hiveService);
-
-  Box<Transaction> get _transactionBox => _hiveService.transactionBox;
+  TransactionRepository(this._transactionBox);
 
   /// Adds a new transaction to the Hive box.
   Future<void> addTransaction(Transaction transaction) async {
     await _transactionBox.put(transaction.id, transaction);
   }
 
+  /// Clears all transactions from the Hive box.
+  Future<void> clearAllTransactions() async {
+    await _transactionBox.clear();
+  }
+
   /// Returns a stream of all transactions, reacting to changes in the Hive box.
-  Stream<List<Transaction>> watchAllTransactions() {
-    return _transactionBox.watch().map(
-      (event) => _transactionBox.values.toList(),
-    );
+  Stream<List<Transaction>> watchAllTransactions() async* {
+    // Emit the current list of transactions immediately
+    yield _transactionBox.values.toList();
+
+    // Then, yield new lists whenever the box changes
+    await for (var event in _transactionBox.watch()) {
+      yield _transactionBox.values.toList();
+    }
   }
 }

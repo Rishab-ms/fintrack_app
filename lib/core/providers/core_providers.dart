@@ -9,26 +9,36 @@ import 'package:fintrack_app/core/data/models/budget_model.dart';
 part 'core_providers.g.dart';
 
 @Riverpod(keepAlive: true)
-HiveService hiveService(HiveServiceRef ref) {
-  return HiveService();
+Future<HiveService> hiveService(HiveServiceRef ref) async {
+  final hiveService = HiveService();
+  await hiveService.openBoxes();
+  return hiveService;
 }
 
 @Riverpod(keepAlive: true)
-TransactionRepository transactionRepository(TransactionRepositoryRef ref) {
-  return TransactionRepository(ref.watch(hiveServiceProvider));
+Future<TransactionRepository> transactionRepository(
+  TransactionRepositoryRef ref,
+) async {
+  final hiveService = await ref.watch(hiveServiceProvider.future);
+  return TransactionRepository(hiveService.transactionBox);
 }
 
 @Riverpod(keepAlive: true)
-BudgetRepository budgetRepository(BudgetRepositoryRef ref) {
-  return BudgetRepository(ref.watch(hiveServiceProvider));
+Future<BudgetRepository> budgetRepository(BudgetRepositoryRef ref) async {
+  final hiveService = await ref.watch(hiveServiceProvider.future);
+  return BudgetRepository(hiveService.budgetBox);
 }
 
 @Riverpod(keepAlive: true)
-Stream<List<Transaction>> allTransactions(AllTransactionsRef ref) {
-  return ref.watch(transactionRepositoryProvider).watchAllTransactions();
+Stream<List<Transaction>> allTransactions(AllTransactionsRef ref) async* {
+  final transactionRepository = await ref.watch(
+    transactionRepositoryProvider.future,
+  );
+  yield* transactionRepository.watchAllTransactions();
 }
 
 @Riverpod(keepAlive: true)
-Stream<List<Budget>> allBudgets(AllBudgetsRef ref) {
-  return ref.watch(budgetRepositoryProvider).watchAllBudgets();
+Stream<List<Budget>> allBudgets(AllBudgetsRef ref) async* {
+  final budgetRepository = await ref.watch(budgetRepositoryProvider.future);
+  yield* budgetRepository.watchAllBudgets();
 }
