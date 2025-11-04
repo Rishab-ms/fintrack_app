@@ -67,4 +67,23 @@ extension CategoryExtension on Category {
         return Icons.category;
     }
   }
+
+  Color get color {
+    switch (this) {
+      case Category.food:
+        return Colors.orange;
+      case Category.travel:
+        return Colors.blue;
+      case Category.bills:
+        return Colors.red;
+      case Category.shopping:
+        return Colors.purple;
+      case Category.entertainment:
+        return Colors.green;
+      case Category.health:
+        return Colors.teal;
+      case Category.other:
+        return Colors.grey;
+    }
+  }
 }

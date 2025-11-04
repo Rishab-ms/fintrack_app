@@ -1,14 +1,72 @@
+import 'package:fintrack_app/core/shared/constants.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:fintrack_app/core/data/models/budget_model.dart';
-import 'package:fintrack_app/core/data/services/hive_service.dart';
 
+/// A repository for managing [Budget] data using Hive for local persistence.
+///
+/// This class provides CRUD (Create, Read, Update, Delete) operations
+/// for budgets and exposes a stream to react to changes in the budget data.
 class BudgetRepository {
   final Box<Budget> _budgetBox;
 
+  /// Constructs a [BudgetRepository] with the given Hive box for budgets.
   BudgetRepository(this._budgetBox);
 
   /// Returns a stream of all budgets, reacting to changes in the Hive box.
-  Stream<List<Budget>> watchAllBudgets() {
-    return _budgetBox.watch().map((event) => _budgetBox.values.toList());
+  ///
+  /// This method uses an `async*` generator to create a stream.
+  /// 1. It `yield`s the current list of budgets immediately upon subscription.
+  ///    This ensures that consumers of the stream (e.g., Riverpod providers, UI widgets)
+  ///    receive an initial value right away, preventing them from being stuck in a loading state
+  ///    even if the box is empty.
+  /// 2. It then `await for` changes in the `_budgetBox.watch()` stream.
+  ///    `_budgetBox.watch()` emits a [BoxEvent] whenever data in the box changes.
+  ///    For each change, it `yield`s the updated list of all budgets.
+  ///    The `_` is used for the `event` variable because the specific event details
+  ///    are not needed; only the fact that a change occurred is relevant to re-emit the list.
+  Stream<List<Budget>> watchAllBudgets() async* {
+    yield _budgetBox.values.toList(); // Emit current list immediately
+    await for (final _ in _budgetBox.watch()) { // Use '_' to ignore the unused 'event' variable
+      yield _budgetBox.values.toList();
+    }
+  }
+
+  /// Saves a budget. If a budget for the category already exists, it updates it;
+  /// otherwise, it adds a new budget.
+  ///
+  /// Hive does not provide a direct "update by key" mechanism for objects
+  /// where the key is not the object itself (like [Category] in this case).
+  /// Therefore, this method first attempts to find an existing budget for the
+  /// given [category].
+  /// - If an existing budget is found and its content is different from the new [budget],
+  ///   the old budget is deleted, and the new one is added. This effectively updates it.
+  /// - If no existing budget is found (or `orElse` returns the new budget itself),
+  ///   the new budget is simply added to the box.
+  Future<void> saveBudget(Budget budget) async {
+    final existingBudget = _budgetBox.values.firstWhere(
+      (b) => b.category == budget.category,
+      orElse: () => budget, // If not found, return the new budget to be added
+    );
+
+    if (existingBudget != budget) {
+      // If an existing budget was found and it's different, update it
+      await existingBudget.delete(); // Delete the old one
+      await _budgetBox.add(budget); // Add the new one
+    } else {
+      // If no existing budget was found (orElse returned the new budget), add it
+      await _budgetBox.add(budget);
+    }
+  }
+
+  /// Deletes a budget by its [Category].
+  ///
+  /// It finds the budget associated with the given [category] and removes it from the Hive box.
+  /// Throws an [Exception] if no budget is found for the specified category.
+  Future<void> deleteBudget(Category category) async {
+    final budgetToDelete = _budgetBox.values.firstWhere(
+      (b) => b.category == category,
+      orElse: () => throw Exception('Budget for category $category not found'),
+    );
+    await budgetToDelete.delete();
   }
 }
