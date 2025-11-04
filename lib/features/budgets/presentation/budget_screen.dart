@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fintrack_app/core/data/models/budget_model.dart';
 import 'package:fintrack_app/core/data/repositories/budget_repository.dart';
 import 'package:fintrack_app/core/providers/core_providers.dart';
-import 'package:fintrack_app/core/shared/constants.dart';
-import 'package:fintrack_app/core/shared/utils/date_money_helpers.dart';
 import 'package:fintrack_app/features/budgets/providers/budget_providers.dart';
 import 'package:fintrack_app/features/budgets/presentation/widgets/budget_card.dart';
+import 'package:intl/intl.dart'; // Import for DateFormat
 import 'package:fintrack_app/config/app_theme.dart'; // Import AppSpacing
 
 /// The main UI screen for displaying and managing monthly budgets.
@@ -28,9 +26,21 @@ class BudgetScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Monthly Budgets',
-          style: Theme.of(context).appBarTheme.titleTextStyle,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Monthly Budgets',
+              style: Theme.of(context).appBarTheme.titleTextStyle,
+            ),
+            Text(
+              DateFormat.MMMM().format(DateTime.now()),
+              style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
       body: budgetStatusAsync.when(
