@@ -6,6 +6,8 @@ import 'package:fintrack_app/core/shared/constants.dart';
 import 'package:fintrack_app/core/shared/utils/date_money_helpers.dart';
 import 'package:fintrack_app/features/transactions/presentation/widgets/add_transaction_modal.dart';
 import 'package:intl/intl.dart';
+import 'package:fintrack_app/features/transactions/presentation/widgets/transaction_card.dart';
+import 'package:fintrack_app/config/app_theme.dart'; // Import AppSpacing
 
 class TransactionListScreen extends ConsumerWidget {
   const TransactionListScreen({super.key});
@@ -16,13 +18,21 @@ class TransactionListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Transactions'),
+        title: Text(
+          'All Transactions',
+          style: Theme.of(context).appBarTheme.titleTextStyle,
+        ),
       ),
       body: allTransactionsAsync.when(
         data: (transactions) {
           if (transactions.isEmpty) {
-            return const Center(
-              child: Text('No transactions yet. Click "+" to add one!'),
+            return Center(
+              child: Text(
+                'No transactions yet. Click "+" to add one!',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
             );
           }
 
@@ -54,49 +64,16 @@ class TransactionListScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     child: Text(
                       month,
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                     ),
                   ),
                   ...transactionsInMonth.map((transaction) {
-                    final isExpense =
-                        transaction.type == TransactionType.expense;
-                    final amountColor =
-                        isExpense ? Colors.red : Colors.green;
-                    final icon = isExpense
-                        ? transaction.category?.icon ?? Icons.category
-                        : Icons.attach_money; // Default icon for income
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 4.0),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).primaryColorLight,
-                          child: Icon(icon,
-                              color: Theme.of(context).primaryColorDark),
-                        ),
-                        title: Text(
-                          transaction.description ??
-                              (isExpense
-                                  ? transaction.category?.displayName ??
-                                      'Unknown Expense'
-                                  : 'Income'),
-                        ),
-                        subtitle: Text(
-                          '${formatDate(transaction.date)} - ${isExpense ? transaction.category?.displayName ?? 'N/A' : 'Income'}',
-                        ),
-                        trailing: Text(
-                          formatCurrency(transaction.amount),
-                          style: TextStyle(
-                            color: amountColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    );
+                    return TransactionCard(transaction: transaction);
                   }).toList(),
                 ],
               );
@@ -110,8 +87,17 @@ class TransactionListScreen extends ConsumerWidget {
         onPressed: () {
           showAddTransactionModal(context);
         },
-        label: const Text('Add'),
-        icon: const Icon(Icons.add),
+        label: Text(
+          'Add',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+        ),
+        icon: Icon(
+          Icons.add,
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
     );
   }

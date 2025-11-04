@@ -7,6 +7,7 @@ import 'package:fintrack_app/core/shared/constants.dart';
 import 'package:fintrack_app/core/shared/utils/date_money_helpers.dart';
 import 'package:fintrack_app/features/dashboard/providers/dashboard_providers.dart';
 import 'package:fintrack_app/features/transactions/presentation/transaction_list_screen.dart'; // For "View All" navigation
+import 'package:fintrack_app/main.dart'; // Import main.dart to access themeModeProvider
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -14,10 +15,14 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allTransactionsStream = ref.watch(allTransactionsProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FinTrack'),
+        title: Text(
+          'FinTrack',
+          style: Theme.of(context).appBarTheme.titleTextStyle,
+        ),
         centerTitle: false,
         actions: [
           PopupMenuButton<String>(
@@ -25,28 +30,49 @@ class DashboardScreen extends ConsumerWidget {
               if (value == 'download_csv') {
                 // TODO: Implement CSV download functionality
               } else if (value == 'toggle_dark_mode') {
-                // TODO: Implement dark mode functionality
+                ref.read(themeModeProvider.notifier).state =
+                    themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
               }
             },
-            icon: Icon(Icons.more_vert_rounded),
+            icon: const Icon(Icons.more_vert_rounded),
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'download_csv',
                 child: Row(
                   children: [
-                    Icon(Icons.download),
-                    SizedBox(width: 8),
-                    Text('Download CSV'),
+                    Icon(
+                      Icons.download,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Download CSV',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                    ),
                   ],
                 ),
               ),
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'toggle_dark_mode',
                 child: Row(
                   children: [
-                    Icon(Icons.dark_mode),
-                    SizedBox(width: 8),
-                    Text('Toggle Dark Mode'),
+                    Icon(
+                      themeMode == ThemeMode.dark
+                          ? Icons.light_mode
+                          : Icons.dark_mode,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      themeMode == ThemeMode.dark
+                          ? 'Toggle Light Mode'
+                          : 'Toggle Dark Mode',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                    ),
                   ],
                 ),
               ),
@@ -77,27 +103,27 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               // Current Balance Card
               Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                elevation: Theme.of(context).cardTheme.elevation,
+                shape: Theme.of(context).cardTheme.shape,
+                color: Theme.of(context).cardTheme.color,
+                margin: Theme.of(context).cardTheme.margin,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Current Balance',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         formatCurrency(balanceData.currentBalance),
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
+                        style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -107,13 +133,13 @@ class DashboardScreen extends ConsumerWidget {
                             context,
                             'Income',
                             balanceData.monthlyIncome,
-                            Colors.green,
+                            Theme.of(context).colorScheme.secondary,
                           ),
                           _buildBalanceDetail(
                             context,
                             'Expenses',
                             balanceData.monthlyExpenses,
-                            Colors.red,
+                            Theme.of(context).colorScheme.error,
                           ),
                         ],
                       ),
@@ -126,36 +152,38 @@ class DashboardScreen extends ConsumerWidget {
               // Expense Distribution Card
               if (chartData.isEmpty)
                 Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  elevation: Theme.of(context).cardTheme.elevation,
+                  shape: Theme.of(context).cardTheme.shape,
+                  color: Theme.of(context).cardTheme.color,
+                  margin: Theme.of(context).cardTheme.margin,
                   child: Padding(
-                    padding: EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: Center(
                       child: Text(
                         'No expenses for the current month to display chart.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                       ),
                     ),
                   ),
                 )
               else
                 Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  elevation: Theme.of(context).cardTheme.elevation,
+                  shape: Theme.of(context).cardTheme.shape,
+                  color: Theme.of(context).cardTheme.color,
+                  margin: Theme.of(context).cardTheme.margin,
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Expense Distribution (Current Month)',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                         ),
                         const SizedBox(height: 20),
                         SizedBox(
@@ -176,11 +204,15 @@ class DashboardScreen extends ConsumerWidget {
                                   title:
                                       '${(segment.value / totalMonthlyExpenses * 100).toStringAsFixed(1)}%',
                                   radius: radius,
-                                  titleStyle: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                                  titleStyle: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
+                                      ),
                                   badgeWidget: null, // No badge for now
                                 );
                               }).toList(),
@@ -209,10 +241,10 @@ class DashboardScreen extends ConsumerWidget {
 
               // Recent Transactions Card
               Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                elevation: Theme.of(context).cardTheme.elevation,
+                shape: Theme.of(context).cardTheme.shape,
+                color: Theme.of(context).cardTheme.color,
+                margin: Theme.of(context).cardTheme.margin,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
@@ -221,12 +253,11 @@ class DashboardScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Recent Transactions',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
                           ),
                           TextButton(
                             onPressed: () {
@@ -237,15 +268,27 @@ class DashboardScreen extends ConsumerWidget {
                                 ),
                               );
                             },
-                            child: const Text('View All'),
+                            child: Text(
+                              'View All',
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 10),
                       if (displayTransactions.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10.0),
-                          child: Center(child: Text('No recent transactions.')),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
+                          child: Center(
+                            child: Text(
+                              'No recent transactions.',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                            ),
+                          ),
                         )
                       else
                         ...displayTransactions.map((transaction) {
@@ -273,15 +316,19 @@ class DashboardScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
         const SizedBox(height: 4),
         Text(
           formatCurrency(amount),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     );
@@ -289,7 +336,9 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _buildTransactionItem(BuildContext context, Transaction transaction) {
     final isExpense = transaction.type == TransactionType.expense;
-    final amountColor = isExpense ? Colors.red : Colors.green;
+    final amountColor = isExpense
+        ? Theme.of(context).colorScheme.error
+        : Theme.of(context).colorScheme.secondary;
     final sign = isExpense ? '-' : '+';
 
     return Padding(
@@ -297,11 +346,13 @@ class DashboardScreen extends ConsumerWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: (transaction.category?.color ?? Colors.grey)
+            backgroundColor: (transaction.category?.color ??
+                    Theme.of(context).colorScheme.surfaceVariant)
                 .withOpacity(0.2),
             child: Icon(
               transaction.category?.icon ?? Icons.attach_money,
-              color: transaction.category?.color ?? Colors.grey,
+              color: transaction.category?.color ??
+                  Theme.of(context).colorScheme.onSurfaceVariant,
               size: 20,
             ),
           ),
@@ -315,20 +366,28 @@ class DashboardScreen extends ConsumerWidget {
                       (isExpense
                           ? transaction.category?.displayName ?? 'Expense'
                           : 'Income'),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   '${formatDate(transaction.date)} ${isExpense ? '• ${transaction.category?.displayName ?? ''}' : ''}',
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ],
             ),
           ),
           Text(
             '$sign ${formatCurrency(transaction.amount)}',
-            style: TextStyle(color: amountColor, fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: amountColor,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
         ],
       ),
@@ -355,7 +414,10 @@ class _LegendWidget extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           title,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
         ),
       ],
     );
