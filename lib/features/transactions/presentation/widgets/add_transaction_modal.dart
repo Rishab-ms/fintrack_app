@@ -48,16 +48,13 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
     final enteredAmount = double.tryParse(_amountController.text);
     final amountIsInvalid = enteredAmount == null || enteredAmount <= 0;
 
-    if (amountIsInvalid ||
-        _descriptionController.text.trim().isEmpty ||
-        (_selectedType == TransactionType.expense &&
-            _selectedCategory == null)) {
+    if (amountIsInvalid) {
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Invalid Input'),
           content: const Text(
-            'Please make sure a valid amount, description, and category (for expenses) was entered.',
+            'Please make sure a valid amount was entered.',
           ),
           actions: [
             TextButton(
