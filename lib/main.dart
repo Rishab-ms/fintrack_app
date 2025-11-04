@@ -11,18 +11,6 @@ final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await HiveService.init();
-
-  // For debugging: Clear all transactions
-  //todo: remove this before submission
-  final container = ProviderContainer();
-  await container.read(
-    hiveServiceProvider.future,
-  ); // Ensure HiveService is initialized
-  final transactionRepository = await container.read(
-    transactionRepositoryProvider.future,
-  );
-  await transactionRepository.clearAllTransactions();
-  container.dispose();
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -32,7 +20,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-  
+
     return MaterialApp(
       title: 'FinTrack',
       debugShowCheckedModeBanner: false,
