@@ -1,6 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:fintrack_app/core/data/models/transaction_model.dart';
-import 'package:fintrack_app/core/data/services/hive_service.dart';
+
 
 class TransactionRepository {
   final Box<Transaction> _transactionBox;

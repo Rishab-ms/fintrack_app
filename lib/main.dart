@@ -11,8 +11,12 @@ void main() async {
   // For debugging: Clear all transactions
   //todo: remove this before submission
   final container = ProviderContainer();
-  await container.read(hiveServiceProvider.future); // Ensure HiveService is initialized
-  final transactionRepository = await container.read(transactionRepositoryProvider.future);
+  await container.read(
+    hiveServiceProvider.future,
+  ); // Ensure HiveService is initialized
+  final transactionRepository = await container.read(
+    transactionRepositoryProvider.future,
+  );
   await transactionRepository.clearAllTransactions();
   container.dispose();
   runApp(const ProviderScope(child: MyApp()));
@@ -25,6 +29,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FinTrack',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
