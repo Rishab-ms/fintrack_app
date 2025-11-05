@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fintrack_app/core/data/services/hive_service.dart';
 import 'package:fintrack_app/features/home/presentation/home_screen.dart';
-import 'package:fintrack_app/core/providers/core_providers.dart'; // Import core providers
+
 import 'package:fintrack_app/config/app_theme.dart';
 
 // Provider for managing theme mode

@@ -2,7 +2,6 @@ import 'package:fintrack_app/core/shared/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:fintrack_app/core/data/models/transaction_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import for ConsumerWidget
-import 'package:fintrack_app/core/data/repositories/transaction_repository.dart'; // Import for transactionRepositoryProvider
 import 'package:fintrack_app/core/providers/core_providers.dart'; // Import for transactionRepositoryProvider
 import 'package:fintrack_app/core/shared/utils/date_money_helpers.dart';
 import 'package:fintrack_app/config/app_theme.dart'; // Import AppColors for semantic colors

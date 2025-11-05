@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:async/async.dart'; // Import StreamQueue
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
